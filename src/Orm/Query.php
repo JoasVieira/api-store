@@ -13,10 +13,10 @@ class Query
 {
     public function __construct(
         protected PDO $database
-    )
-    {}
+    ) {
+    }
 
-    public function insert(Entity $entity) : string
+    public function insert(Entity $entity): string
     {
         $entityPersistenceInformation = $this->entityPersistenceInformation($entity);
 
@@ -31,7 +31,7 @@ class Query
 
         foreach ($entityPersistenceInformation->columnsBind as $chave => $column) {
             $stmt->bindValue(
-                $column, 
+                $column,
                 $entityPersistenceInformation->columnsValue[$chave]
             );
         }
@@ -39,14 +39,12 @@ class Query
         $stmt->execute();
 
         return $this->database->lastInsertId();
-
-
     }
 
-    public function find(int|string $id, string $className) : ?Entity
+    public function find(int|string $id, string $className): ?Entity
     {
         $entityPersistenceInformation = $this->classNamePersistenceInformation($className);
-        
+
         $stmt = $this->database->prepare(
             sprintf(
                 "select %s from %s where %s = :id",
@@ -61,20 +59,19 @@ class Query
         $record = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($record) {
             return $this->recordToEntity(
-                $record, 
-                $className, 
+                $record,
+                $className,
                 $entityPersistenceInformation->columnsType
             );
         }
 
         return null;
-
     }
 
-    public function findAll(string $className) : array
+    public function findAll(string $className): array
     {
         $entityPersistenceInformation = $this->classNamePersistenceInformation($className);
-        
+
         $stmt = $this->database->prepare(
             sprintf(
                 "select %s from %s",
@@ -88,29 +85,28 @@ class Query
 
         $columnsType = $entityPersistenceInformation->columnsType;
 
-        return array_map(function ($record) use ($className, $columnsType){
+        return array_map(function ($record) use ($className, $columnsType) {
             return $this->recordToEntity(
-                $record, 
-                $className, 
+                $record,
+                $className,
                 $columnsType
             );
         }, $records);
-        
     }
 
     public function delete(Entity $entity): bool
     {
         $entityPersistenceInformation = $this->entityPersistenceInformation($entity);
         $stmt = $this->database->prepare(
-            sprintf("delete from %s where %s = :id",
+            sprintf(
+                "delete from %s where %s = :id",
                 $entityPersistenceInformation->tableName,
                 $entityPersistenceInformation->primaryKey
             )
         );
 
         $stmt->bindParam(':id', $entity->{$entityPersistenceInformation->primaryKey});
-        return $stmt->execute();        
-
+        return $stmt->execute();
     }
 
     public function update(Entity $entity): Entity
@@ -118,10 +114,10 @@ class Query
         $entityPersistenceInformation = $this->entityPersistenceInformation($entity);
         $columnsValue = $entityPersistenceInformation->columnsValue;
         $columnsType = $entityPersistenceInformation->columnsType;
-        
-        $sets = array_map(function($column, $columnValue) use ($columnsType){
-            $delimiter = ($columnsType[$column] === 'string' ) ? "'" : "";
-            return $column."=".$delimiter.$columnValue.$delimiter;
+
+        $sets = array_map(function ($column, $columnValue) use ($columnsType) {
+            $delimiter = ($columnsType[$column] === 'string') ? "'" : "";
+            return $column . "=" . $delimiter . $columnValue . $delimiter;
         }, $entityPersistenceInformation->columns, $columnsValue);
 
         $sql = sprintf(
@@ -130,35 +126,36 @@ class Query
             implode(", ", $sets),
             $entityPersistenceInformation->primaryKey
         );
-        
+
         $stmt = $this->database->prepare($sql);
         $stmt->bindParam(':id', $entity->{$entityPersistenceInformation->primaryKey});
         $stmt->execute();
 
         return $this->find(
-                $entity->{$entityPersistenceInformation->primaryKey}, 
-                $entity::class
+            $entity->{$entityPersistenceInformation->primaryKey},
+            $entity::class
         );
-
     }
 
-    protected function recordToEntity($record, $className, $columnsType) : Entity
+    protected function recordToEntity($record, $className, $columnsType): Entity
     {
         $entity = new $className();
         foreach ($record as $columnName => $value) {
             if ($columnsType[$columnName] === 'int')
-                $value = (int) $value;    
+                $value = (int) $value;
+            if ($columnsType[$columnName] === 'float')
+                $value = (float) $value;
             $entity->{$columnName} = $value;
         }
         return $entity;
     }
 
-    protected function entityPersistenceInformation(Entity $entity) : stdClass
+    protected function entityPersistenceInformation(Entity $entity): stdClass
     {
         return $this->classNamePersistenceInformation(get_class($entity), $entity);
     }
 
-    protected function classNamePersistenceInformation(string $entityName, Entity $entity = null) : stdClass
+    protected function classNamePersistenceInformation(string $entityName, Entity $entity = null): stdClass
     {
         $tableInformation = new stdClass;
         $reflector = new ReflectionClass($entityName);
@@ -175,30 +172,30 @@ class Query
                 if ($propertyAttribute->getName() === PrimaryKey::class) {
                     $tableInformation->primaryKey = $property->name;
                 }
-                
-                if (!is_null($entity) && 
-                    $propertyAttribute->getName() === Column::class && 
-                    !empty($entity->{$property->name})) {
-                        $tableInformation->columns[] = $property->name;
-                        $tableInformation->columnsBind[] = sprintf(":%s", $property->name);
-                        $tableInformation->columnsValue[] = $entity->{$property->name};
-                        $tableInformation->columnsType[$property->name] = 
+
+                if (
+                    !is_null($entity) &&
+                    $propertyAttribute->getName() === Column::class &&
+                    !empty($entity->{$property->name})
+                ) {
+                    $tableInformation->columns[] = $property->name;
+                    $tableInformation->columnsBind[] = sprintf(":%s", $property->name);
+                    $tableInformation->columnsValue[] = $entity->{$property->name};
+                    $tableInformation->columnsType[$property->name] =
                         $reflectionProperty->getType()->getName();
                 }
 
-                if (is_null($entity) 
-                    && $propertyAttribute->getName() == Column::class) {
-                        $tableInformation->columns[] = $property->name;
-                        $tableInformation->columnsType[$property->name] = 
+                if (
+                    is_null($entity)
+                    && $propertyAttribute->getName() == Column::class
+                ) {
+                    $tableInformation->columns[] = $property->name;
+                    $tableInformation->columnsType[$property->name] =
                         $reflectionProperty->getType()->getName();
-                    }
-
-
+                }
             }
         }
 
         return $tableInformation;
-
     }
-
 }
