@@ -68,6 +68,29 @@ class Query
         return null;
     }
 
+    public function executeSql(string $sql, string $className): ?array
+    {
+        $entityPersistenceInformation = $this->classNamePersistenceInformation($className);
+
+        $stmt = $this->database->prepare($sql);
+        $stmt->execute();
+        $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $columnsType = $entityPersistenceInformation->columnsType;
+
+        if ($records) {
+            return array_map(function ($record) use ($className, $columnsType) {
+                return $this->recordToEntity(
+                    $record,
+                    $className,
+                    $columnsType
+                );
+            }, $records);
+        }
+
+        return null;
+    }
+
     public function findAll(string $className): array
     {
         $entityPersistenceInformation = $this->classNamePersistenceInformation($className);
