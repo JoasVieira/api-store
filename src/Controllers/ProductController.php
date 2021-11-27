@@ -101,7 +101,7 @@ class ProductController
     {
         $condition = $args['id'];
 
-        $sql = "select * from product where company = $condition";
+        $sql = "select * from product where company_id = $condition";
 
         $products = $this->query->executeSql($sql, Product::class);
 
