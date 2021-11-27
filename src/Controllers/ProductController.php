@@ -74,6 +74,52 @@ class ProductController
         );
     }
 
+    public function showProductInCategory(Request $request, Response $response, $args): Response
+    {
+        $condition = $args['id'];
+
+        $sql = "select * from product where category_id = $condition";
+
+        $products = $this->query->executeSql($sql, Product::class);
+
+        if (is_null($products)) {
+            return JsonResponse::create(
+                $response,
+                ['message' => 'There are no products in this category'],
+                StatusCodeInterface::STATUS_NOT_FOUND
+            );
+        }
+
+        return JsonResponse::create(
+            $response,
+            $products,
+            StatusCodeInterface::STATUS_OK
+        );
+    }
+
+    public function showProductInCompany(Request $request, Response $response, $args): Response
+    {
+        $condition = $args['id'];
+
+        $sql = "select * from product where company = $condition";
+
+        $products = $this->query->executeSql($sql, Product::class);
+
+        if (is_null($products)) {
+            return JsonResponse::create(
+                $response,
+                ['message' => 'There are no products in this company'],
+                StatusCodeInterface::STATUS_NOT_FOUND
+            );
+        }
+
+        return JsonResponse::create(
+            $response,
+            $products,
+            StatusCodeInterface::STATUS_OK
+        );
+    }
+
     public function update(Request $request, Response $response, $args): Response
     {
         $id = $args['id'];

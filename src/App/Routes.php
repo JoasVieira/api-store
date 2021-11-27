@@ -53,6 +53,8 @@ class Routes
             $group->get('', ProductController::class . ':index');
             $group->post('', ProductController::class . ':create');
             $group->get('/{id}', ProductController::class . ':show');
+            $group->get('/category/{id}', ProductController::class . ':showProductInCategory');
+            $group->get('/company/{id}', ProductController::class . ':showProductInCompany');
             $group->put('/{id}', ProductController::class . ':update');
             $group->delete('/{id}', ProductController::class . ':delete');
         });
