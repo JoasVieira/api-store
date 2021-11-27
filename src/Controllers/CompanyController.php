@@ -6,6 +6,8 @@ namespace Api\Controllers;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
+use Fig\Http\Message\StatusCodeInterface;
+use Api\App\JsonResponse;
 
 use Api\Models\Company;
 use Api\Factorys\QueryFactory;
@@ -22,9 +24,13 @@ class CompanyController
 
     public function index(Request $request, Response $response, $args): Response
     {
-        $response->getBody()->write(json_encode($this->query->findAll(Company::class)));
-        return $response->withHeader('Content-Type', 'application/json')
-            ->withStatus(200);
+        $companys = $this->query->findAll(Company::class);
+
+        return JsonResponse::create(
+            $response,
+            $companys,
+            StatusCodeInterface::STATUS_OK
+        );
     }
 
     public function create(Request $request, Response $response, $args): Response
@@ -39,10 +45,11 @@ class CompanyController
 
         $newCompany = $this->query->find($id, Company::class);
 
-        $response->getBody()->write(json_encode($newCompany));
-        return $response
-            ->withHeader('Content-Type', 'application/json')
-            ->withStatus(201);
+        return JsonResponse::create(
+            $response,
+            $newCompany,
+            StatusCodeInterface::STATUS_CREATED
+        );
     }
 
     public function show(Request $request, Response $response, $args): Response
@@ -50,12 +57,18 @@ class CompanyController
         $id = $args['id'];
         $company = $this->query->find($id, Company::class);
         if (is_null($company)) {
-            return $response->withStatus(404);
+            return JsonResponse::create(
+                $response,
+                ['message' => 'Company does not exist'],
+                StatusCodeInterface::STATUS_NOT_FOUND
+            );
         }
 
-        $response->getBody()->write(json_encode($company));
-        return $response
-            ->withHeader('Content-Type', 'application/json');
+        return JsonResponse::create(
+            $response,
+            $company,
+            StatusCodeInterface::STATUS_OK
+        );
     }
 
     public function update(Request $request, Response $response, $args): Response
@@ -74,18 +87,30 @@ class CompanyController
 
         $this->query->update($company);
 
-        $response->getBody()->write(json_encode($this->query->find($id, Company::class)));
-        return $response->withHeader('Content-Type', 'application/json')
-            ->withStatus(200);
+        $newCompany = $this->query->find($id, Company::class);
+
+        return JsonResponse::create(
+            $response,
+            $newCompany,
+            StatusCodeInterface::STATUS_OK
+        );
     }
 
     public function delete(Request $request, Response $response, $args): Response
     {
         $company = $this->query->find($args['id'], Company::class);
         if (is_null($company)) {
-            return $response->withStatus(404);
+            return JsonResponse::create(
+                $response,
+                ['message' => 'Company does not exist'],
+                StatusCodeInterface::STATUS_NOT_FOUND
+            );
         }
         $this->query->delete($company);
-        return $response->withStatus(204);
+        return JsonResponse::create(
+            $response,
+            ['success' => true],
+            StatusCodeInterface::STATUS_NO_CONTENT
+        );
     }
 }

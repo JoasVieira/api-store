@@ -6,10 +6,11 @@ namespace Api\Controllers;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
+use Fig\Http\Message\StatusCodeInterface;
+use Api\App\JsonResponse;
 
 use Api\Models\Category;
 use Api\Factorys\QueryFactory;
-
 
 class CategoryController
 {
@@ -22,9 +23,13 @@ class CategoryController
 
     public function index(Request $request, Response $response, $args): Response
     {
-        $response->getBody()->write(json_encode($this->query->findAll(Category::class)));
-        return $response->withHeader('Content-Type', 'application/json')
-            ->withStatus(200);
+        $categorys = $this->query->findAll(Category::class);
+
+        return JsonResponse::create(
+            $response,
+            $categorys,
+            StatusCodeInterface::STATUS_OK
+        );
     }
 
     public function create(Request $request, Response $response, $args): Response
@@ -38,10 +43,11 @@ class CategoryController
 
         $newCategory = $this->query->find($id, Category::class);
 
-        $response->getBody()->write(json_encode($newCategory));
-        return $response
-            ->withHeader('Content-Type', 'application/json')
-            ->withStatus(201);
+        return JsonResponse::create(
+            $response,
+            $newCategory,
+            StatusCodeInterface::STATUS_CREATED
+        );
     }
 
     public function show(Request $request, Response $response, $args): Response
@@ -49,12 +55,18 @@ class CategoryController
         $id = $args['id'];
         $category = $this->query->find($id, Category::class);
         if (is_null($category)) {
-            return $response->withStatus(404);
+            return JsonResponse::create(
+                $response,
+                ['message' => 'Category does not exist'],
+                StatusCodeInterface::STATUS_NOT_FOUND
+            );
         }
 
-        $response->getBody()->write(json_encode($category));
-        return $response
-            ->withHeader('Content-Type', 'application/json');
+        return JsonResponse::create(
+            $response,
+            $category,
+            StatusCodeInterface::STATUS_OK
+        );
     }
 
     public function update(Request $request, Response $response, $args): Response
@@ -72,18 +84,30 @@ class CategoryController
 
         $this->query->update($category);
 
-        $response->getBody()->write(json_encode($this->query->find($id, Category::class)));
-        return $response->withHeader('Content-Type', 'application/json')
-            ->withStatus(200);
+        $newCategory = $this->query->find($id, Category::class);
+
+        return JsonResponse::create(
+            $response,
+            $newCategory,
+            StatusCodeInterface::STATUS_OK
+        );
     }
 
     public function delete(Request $request, Response $response, $args): Response
     {
         $category = $this->query->find($args['id'], Category::class);
         if (is_null($category)) {
-            return $response->withStatus(404);
+            return JsonResponse::create(
+                $response,
+                ['message' => 'Category does not exist'],
+                StatusCodeInterface::STATUS_NOT_FOUND
+            );
         }
         $this->query->delete($category);
-        return $response->withStatus(204);
+        return JsonResponse::create(
+            $response,
+            ['success' => true],
+            StatusCodeInterface::STATUS_NO_CONTENT
+        );
     }
 }
