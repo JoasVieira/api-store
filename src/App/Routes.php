@@ -10,8 +10,11 @@ use Slim\Routing\RouteCollectorProxy;
 
 use Api\Controllers\CategoryController;
 use Api\Controllers\CompanyController;
+use Api\Controllers\InfoController;
 use Api\Controllers\ProductController;
 
+use Api\Middlewares\LogMiddleware;
+use Api\Middlewares\CacheMiddleware; 
 
 class Routes
 {
@@ -28,13 +31,13 @@ class Routes
         self::$app->add(function ($request, $handler) {
             $response = $handler->handle($request);
             return $response
-                    ->withHeader('Access-Control-Allow-Origin', '*')
-                    ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
-                    ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+                ->withHeader('Access-Control-Allow-Origin', '*')
+                ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
+                ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
         });
 
         self::$app->group('/category', function (RouteCollectorProxy $group): void {
-            $group->get('', CategoryController::class . ':index');
+            $group->get('', CategoryController::class . ':index')->add(new CacheMiddleware());
             $group->post('', CategoryController::class . ':create');
             $group->get('/{id}', CategoryController::class . ':show');
             $group->put('/{id}', CategoryController::class . ':update');
@@ -42,7 +45,7 @@ class Routes
         });
 
         self::$app->group('/company', function (RouteCollectorProxy $group): void {
-            $group->get('', CompanyController::class . ':index');
+            $group->get('', CompanyController::class . ':index')->add(new CacheMiddleware());
             $group->post('', CompanyController::class . ':create');
             $group->get('/{id}', CompanyController::class . ':show');
             $group->put('/{id}', CompanyController::class . ':update');
@@ -50,7 +53,7 @@ class Routes
         });
 
         self::$app->group('/product', function (RouteCollectorProxy $group): void {
-            $group->get('', ProductController::class . ':index');
+            $group->get('', ProductController::class . ':index')->add(new CacheMiddleware());
             $group->post('', ProductController::class . ':create');
             $group->get('/{id}', ProductController::class . ':show');
             $group->get('/category/{id}', ProductController::class . ':showProductInCategory');
