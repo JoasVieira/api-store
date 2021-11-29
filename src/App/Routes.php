@@ -42,7 +42,7 @@ class Routes
             $group->get('/{id}', CategoryController::class . ':show');
             $group->put('/{id}', CategoryController::class . ':update');
             $group->delete('/{id}', CategoryController::class . ':delete');
-        });
+        })->add(new LogMiddleware());
 
         self::$app->group('/company', function (RouteCollectorProxy $group): void {
             $group->get('', CompanyController::class . ':index')->add(new CacheMiddleware());
@@ -50,7 +50,7 @@ class Routes
             $group->get('/{id}', CompanyController::class . ':show');
             $group->put('/{id}', CompanyController::class . ':update');
             $group->delete('/{id}', CompanyController::class . ':delete');
-        });
+        })->add(new LogMiddleware());
 
         self::$app->group('/product', function (RouteCollectorProxy $group): void {
             $group->get('', ProductController::class . ':index')->add(new CacheMiddleware());
@@ -60,7 +60,7 @@ class Routes
             $group->get('/company/{id}', ProductController::class . ':showProductInCompany');
             $group->put('/{id}', ProductController::class . ':update');
             $group->delete('/{id}', ProductController::class . ':delete');
-        });
+        })->add(new LogMiddleware());
 
         return self::$app;
     }
