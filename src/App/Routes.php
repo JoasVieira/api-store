@@ -36,6 +36,12 @@ class Routes
                 ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
         });
 
+        self::$app->group('/', function (RouteCollectorProxy $group): void {
+            $group->get('', InfoController::class . ':home');
+            $group->get('server', InfoController::class . ':server');
+        })->add(new CacheMiddleware())
+          ->add(new LogMiddleware());
+
         self::$app->group('/category', function (RouteCollectorProxy $group): void {
             $group->get('', CategoryController::class . ':index')->add(new CacheMiddleware());
             $group->post('', CategoryController::class . ':create');
