@@ -36,7 +36,7 @@ class ProductController
     {
         $productRequest = json_decode($request->getBody()->getContents());
 
-        $namePhoto = bin2hex(random_bytes(10)) .'.png';
+        $namePhoto = bin2hex(random_bytes(10)) . '.png';
         $path = '../public/images/' . $namePhoto;
         file_put_contents($path, base64_decode($productRequest->photo));
 
@@ -67,7 +67,7 @@ class ProductController
 
         $response->getBody()->write($files);
         return $response->withHeader('Content-type', 'image/png')
-                        ->withStatus(200);
+            ->withStatus(200);
     }
 
     public function show(Request $request, Response $response, $args): Response
@@ -146,8 +146,17 @@ class ProductController
 
         $productRequest = json_decode($request->getBody()->getContents());
 
+        $namePhoto = bin2hex(random_bytes(10)) . '.png';
+        $path = '../public/images/' . $namePhoto;
+
+        if ($productRequest->photo != $product->photo) {
+            unlink('../public/images/'. $product->photo);
+
+            file_put_contents($path, base64_decode($productRequest->photo));
+        }
+
         $product->name = $productRequest->name;
-        $product->photo = $productRequest->photo;
+        $product->photo = $namePhoto;
         $product->description = $productRequest->description;
         $product->price = $productRequest->price;
         $product->category_id = $productRequest->category_id;
