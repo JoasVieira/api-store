@@ -62,6 +62,7 @@ class Routes
             $group->get('', ProductController::class . ':index')->add(new CacheMiddleware());
             $group->post('', ProductController::class . ':create');
             $group->get('/{id}', ProductController::class . ':show');
+            $group->get('/image/{id}', ProductController::class . ':showImage');
             $group->get('/category/{id}', ProductController::class . ':showProductInCategory');
             $group->get('/company/{id}', ProductController::class . ':showProductInCompany');
             $group->put('/{id}', ProductController::class . ':update');

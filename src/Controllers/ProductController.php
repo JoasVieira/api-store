@@ -36,9 +36,13 @@ class ProductController
     {
         $productRequest = json_decode($request->getBody()->getContents());
 
+        $namePhoto = bin2hex(random_bytes(10)) .'.png';
+        $path = '../public/images/' . $namePhoto;
+        file_put_contents($path, base64_decode($productRequest->photo));
+
         $product = new Product;
         $product->name = $productRequest->name;
-        $product->photo = $productRequest->photo;
+        $product->photo = $namePhoto;
         $product->description = $productRequest->description;
         $product->price = $productRequest->price;
         $product->category_id = $productRequest->category_id;
@@ -53,6 +57,17 @@ class ProductController
             $newProduct,
             StatusCodeInterface::STATUS_CREATED
         );
+    }
+
+    public function showImage(Request $request, Response $response, $args): Response
+    {
+        $id = $args['id'];
+
+        $files = file_get_contents('../public/images/' . $id);
+
+        $response->getBody()->write($files);
+        return $response->withHeader('Content-type', 'image/png')
+                        ->withStatus(200);
     }
 
     public function show(Request $request, Response $response, $args): Response
